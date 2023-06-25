@@ -1,2 +1,2 @@
 # Colossus
-Overengineered thumpnail app
+Over-engineered thumbnail app
