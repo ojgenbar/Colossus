@@ -15,6 +15,7 @@ func Prepare() *utils.Config {
 		panic(err)
 	}
 	handlers.PrepareS3Buckets(cfg.S3)
+	handlers.RegisterMetrics()
 	return cfg
 }
 

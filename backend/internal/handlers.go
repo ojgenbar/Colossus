@@ -8,6 +8,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/ojgenbar/Colossus/backend/utils"
+	"github.com/prometheus/client_golang/prometheus"
 	"log"
 	"mime/multipart"
 	"net/http"
@@ -127,6 +128,7 @@ func RetrieveS3File(c *gin.Context, s3cfg utils.S3, bucketName, objectName strin
 	}
 	defer object.Close()
 
+	retrievedRawImages.WithLabelValues(bucketName).Inc()
 	c.DataFromReader(http.StatusOK, objectInfo.Size, objectInfo.ContentType, object, nil)
 }
 
@@ -136,6 +138,26 @@ func JsonErrorResponse(c *gin.Context, err error, status int) {
 		"error":   true,
 	})
 }
+
+func RegisterMetrics() {
+	prometheus.MustRegister(uploadedRawImages)
+	prometheus.MustRegister(retrievedRawImages)
+}
+
+var uploadedRawImages = prometheus.NewCounter(
+	prometheus.CounterOpts{
+		Name: "colossus_backend_uploaded_raw_images",
+		Help: "Count successfully uploaded raw images",
+	},
+)
+
+var retrievedRawImages = prometheus.NewCounterVec(
+	prometheus.CounterOpts{
+		Name: "colossus_backend_retrieved_images",
+		Help: "Count successfully retrieved images from S3",
+	},
+	[]string{"s3_bucket_name"},
+)
 
 func HandleHealthz(c *gin.Context) {
 	c.JSON(200, gin.H{
@@ -161,6 +183,8 @@ func HandleFileUploadToBucket(c *gin.Context) {
 		JsonErrorResponse(c, err, http.StatusInternalServerError)
 		return
 	}
+
+	uploadedRawImages.Inc()
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":            "file uploaded successfully",
