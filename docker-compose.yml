@@ -25,3 +25,5 @@ services:
     command: /backend
     ports:
       - "8080:8080"
+    depends_on:
+      - s3
