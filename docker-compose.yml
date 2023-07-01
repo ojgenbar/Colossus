@@ -13,3 +13,16 @@ services:
       - "9090:9090"
     volumes:
       - ${MINIO_DATA_PATH}:/data
+
+  backend:
+    image: colossus_backend
+    container_name: "colossus_backend"
+    build:
+      context: backend/
+      dockerfile: ./Dockerfile
+    env_file:
+      - backend.env
+    restart: always
+    command: /backend
+    ports:
+      - "8080:8080"

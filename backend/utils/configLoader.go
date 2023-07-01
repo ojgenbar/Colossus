@@ -1,8 +1,6 @@
 package utils
 
 import (
-	"bytes"
-	"fmt"
 	"github.com/gookit/config/v2"
 	"github.com/gookit/config/v2/yamlv3"
 )
@@ -49,20 +47,5 @@ func LoadConfig() (*Config, error) {
 		return nil, err
 	}
 
-	fmt.Printf("config data: \n %#v\n", config.Data())
-	//fmt.Printf("config data: \n %v\n", MyConfig)
-	//fmt.Println(MyConfig.S3.auth.accessKeyID)
-	fmt.Println(cfg.S3.Auth.AccessKeyID)
-	fmt.Println(cfg.S3.Auth.Endpoint)
-	//fmt.Println(config.String("s3.auth.accessKeyID"))
-	fmt.Println()
-
-	buf := new(bytes.Buffer)
-	_, err = config.DumpTo(buf, config.JSON)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Printf("%s", buf.String())
 	return &cfg, nil
 }
