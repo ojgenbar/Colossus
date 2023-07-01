@@ -10,3 +10,8 @@ s3:
     processed:
       bucketName: "${S3_BUCKETS_PROCESSED_BUCKET_NAME}"
       location: "${S3_BUCKETS_PROCESSED_LOCATION}"
+servers:
+  system:
+    addr: "${SERVERS_SYSTEM_ADDR}"
+  main:
+    addr: "${SERVERS_MAIN_ADDR}"

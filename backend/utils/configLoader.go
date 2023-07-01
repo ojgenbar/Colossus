@@ -6,12 +6,18 @@ import (
 )
 
 type Config struct {
-	S3 S3 `mapstructure:"s3"`
+	S3      S3      `mapstructure:"s3"`
+	Servers Servers `mapstructure:"servers"`
 }
 
 type S3 struct {
 	Auth    S3Auth    `mapstructure:"auth"`
 	Buckets S3Buckets `mapstructure:"buckets"`
+}
+
+type Servers struct {
+	System Server `mapstructure:"system"`
+	Main   Server `mapstructure:"main"`
 }
 
 type S3Buckets struct {
@@ -28,6 +34,10 @@ type S3Auth struct {
 type S3Bucket struct {
 	Name     string `mapstructure:"bucketName"`
 	Location string `mapstructure:"location"`
+}
+
+type Server struct {
+	Addr string `mapstructure:"addr"`
 }
 
 func LoadConfig() (*Config, error) {

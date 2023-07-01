@@ -1,9 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	handlers "github.com/ojgenbar/Colossus/backend/internal"
 	"github.com/ojgenbar/Colossus/backend/utils"
+	ginprometheus "github.com/zsais/go-gin-prometheus"
+	"strings"
 )
 
 func Prepare() *utils.Config {
@@ -22,19 +25,36 @@ func ApiMiddleware(cfg *utils.Config) gin.HandlerFunc {
 	}
 }
 
+func PromMiddleware(c *gin.Context) string {
+	url := c.Request.URL.Path
+	for _, p := range c.Params {
+		if p.Key == "type" || p.Key == "file" {
+			url = strings.Replace(url, p.Value, ":"+p.Key, 1)
+		}
+	}
+	return url
+}
+
 func main() {
 	cfg := Prepare()
 
-	r := gin.Default()
-	r.Use(ApiMiddleware(cfg))
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
+	p := ginprometheus.NewPrometheus("gin")
+	p.ReqCntURLLabelMappingFn = PromMiddleware
 
-	r.POST("/upload-image", handlers.HandleFileUploadToBucket)
-	r.GET("/retrieve-image/:type/:file", handlers.HandleFileRetrieveUploadToBucket)
+	routerMain := gin.Default()
+	p.Use(routerMain)
 
-	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	routerMain.Use(ApiMiddleware(cfg))
+
+	routerMain.GET("/healthz", handlers.HandleHealthz)
+	routerMain.POST("/upload-image", handlers.HandleFileUploadToBucket)
+	routerMain.GET("/retrieve-image/:type/:file", handlers.HandleFileRetrieveUploadToBucket)
+
+	routerSystem := gin.Default()
+	p.SetMetricsPath(routerSystem)
+
+	fmt.Printf("Main server addr is %s.\n", cfg.Servers.Main.Addr)
+	fmt.Printf("System server addr is %s.\n", cfg.Servers.System.Addr)
+	go routerMain.Run(cfg.Servers.Main.Addr)
+	routerSystem.Run(cfg.Servers.System.Addr)
 }

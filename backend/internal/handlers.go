@@ -137,6 +137,12 @@ func JsonErrorResponse(c *gin.Context, err error, status int) {
 	})
 }
 
+func HandleHealthz(c *gin.Context) {
+	c.JSON(200, gin.H{
+		"message": "ok",
+	})
+}
+
 func HandleFileUploadToBucket(c *gin.Context) {
 	cfg := c.MustGet("cfg").(*utils.Config)
 
