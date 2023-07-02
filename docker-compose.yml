@@ -1,0 +1,173 @@
+version: "3"
+
+services:
+  s3:
+    image: minio/minio
+    container_name: colossus_s3
+    env_file:
+      - s3.env
+    restart: always
+    command: server /data --console-address ":9090"
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    volumes:
+      - ${MINIO_DATA_PATH}:/data
+
+  backend:
+    image: colossus_backend
+    container_name: colossus_backend
+    build:
+      context: backend/
+      dockerfile: ./Dockerfile
+    env_file:
+      - backend.env
+    restart: always
+    command: /backend
+    ports:
+      - "10001:10001"
+      - "20001:20001"
+    depends_on:
+      - s3
+      - kafka
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: colossus_zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: colossus_kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - 9092:9092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  kafka-minion:
+    image: redpandadata/kminion
+    hostname: kafka-minion
+    container_name: colossus_kminion
+    depends_on:
+      - zookeeper
+      - kafka
+    environment:
+      KAFKA_BROKERS: kafka:29092
+
+  kowl:
+    image: quay.io/cloudhut/kowl
+    container_name: colossus_kowl
+#    restart: always
+    ports:
+      - "10002:8080"
+    environment:
+      KOWL_CONFIG_FILE: |
+        kafka:
+          brokers: ["kafka:29092"]
+    entrypoint: /bin/sh -c "echo \"$$KOWL_CONFIG_FILE\" > /tmp/config.yaml && ./kowl --config.filepath=/tmp/config.yaml"
+    depends_on:
+      - kafka
+
+  # Monitoring & Alerting
+  vmagent:
+    container_name: colossus_vmagent
+    image: victoriametrics/vmagent:v1.91.2
+    depends_on:
+      - "victoriametrics"
+    ports:
+      - 8429:8429
+    volumes:
+      - vmagentdata:/vmagentdata
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--promscrape.config=/etc/prometheus/prometheus.yml"
+      - "--remoteWrite.url=http://victoriametrics:8428/api/v1/write"
+    restart: always
+
+  victoriametrics:
+    container_name: colossus_victoriametrics
+    image: victoriametrics/victoria-metrics:v1.91.2
+    ports:
+      - 8428:8428
+      - 8089:8089
+      - 8089:8089/udp
+      - 2003:2003
+      - 2003:2003/udp
+      - 4242:4242
+    volumes:
+      - vmdata:/storage
+    command:
+      - "--storageDataPath=/storage"
+      - "--graphiteListenAddr=:2003"
+      - "--opentsdbListenAddr=:4242"
+      - "--httpListenAddr=:8428"
+      - "--influxListenAddr=:8089"
+      - "--vmalert.proxyURL=http://vmalert:8880"
+    restart: always
+
+  grafana:
+    container_name: colossus_grafana
+    image: grafana/grafana:9.2.7
+    depends_on:
+      - "victoriametrics"
+    ports:
+      - 3000:3000
+    volumes:
+      - grafanadata:/var/lib/grafana
+      - ./monitoring/provisioning/:/etc/grafana/provisioning/
+      - ./monitoring/dashboards/victoriametrics.json:/var/lib/grafana/dashboards/vm.json
+      - ./monitoring/dashboards/vmagent.json:/var/lib/grafana/dashboards/vmagent.json
+      - ./monitoring/dashboards/vmalert.json:/var/lib/grafana/dashboards/vmalert.json
+      - ./monitoring/dashboards/kminion-cluster.json:/var/lib/grafana/dashboards/kminion-cluster.json
+      - ./monitoring/dashboards/minio.json:/var/lib/grafana/dashboards/minio.json
+      - ./monitoring/dashboards/colossus_backend.json:/var/lib/grafana/dashboards/colossus_backend.json
+    restart: always
+
+  vmalert:
+    container_name: colossus_vmalert
+    image: victoriametrics/vmalert:v1.91.2
+    depends_on:
+      - "victoriametrics"
+      - "alertmanager"
+    ports:
+      - 8880:8880
+    volumes:
+      - ./monitoring/alerts.yml:/etc/alerts/alerts.yml
+      - ./monitoring/alerts-health.yml:/etc/alerts/alerts-health.yml
+      - ./monitoring/alerts-vmagent.yml:/etc/alerts/alerts-vmagent.yml
+      - ./monitoring/alerts-vmalert.yml:/etc/alerts/alerts-vmalert.yml
+    command:
+      - "--datasource.url=http://victoriametrics:8428/"
+      - "--remoteRead.url=http://victoriametrics:8428/"
+      - "--remoteWrite.url=http://victoriametrics:8428/"
+      - "--notifier.url=http://alertmanager:9093/"
+      - "--rule=/etc/alerts/*.yml"
+      # display source of alerts in grafana
+      - "--external.url=http://127.0.0.1:3000" #grafana outside container
+      # when copypaste the line be aware of '$$' for escaping in '$expr'
+      - '--external.alert.source=explore?orgId=1&left={"datasource":"VictoriaMetrics","queries":[{"expr":{{$$expr|jsonEscape|queryEscape}},"refId":"A"}],"range":{"from":"now-1h","to":"now"}}'
+    restart: always
+
+  alertmanager:
+    container_name: colossus_alertmanager
+    image: prom/alertmanager:v0.25.0
+    volumes:
+      - ./monitoring/alertmanager.yml:/config/alertmanager.yml
+    command:
+      - "--config.file=/config/alertmanager.yml"
+    ports:
+      - 9093:9093
+    restart: always
+volumes:
+  vmagentdata: {}
+  vmdata: {}
+  grafanadata: {}

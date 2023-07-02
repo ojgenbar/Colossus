@@ -1,0 +1,22 @@
+s3:
+  auth:
+    endpoint: "${S3_AUTH_ENDPOINT}"
+    accessKeyID: "${S3_AUTH_ACCESS_KEY_ID}"
+    secretAccessKey: "${S3_AUTH_SECRET_ACCESS_KEY}"
+  buckets:
+    raw:
+      bucketName: "${S3_BUCKETS_RAW_BUCKET_NAME}"
+      location: "${S3_BUCKETS_RAW_LOCATION}"
+    processed:
+      bucketName: "${S3_BUCKETS_PROCESSED_BUCKET_NAME}"
+      location: "${S3_BUCKETS_PROCESSED_LOCATION}"
+servers:
+  system:
+    addr: "${SERVERS_SYSTEM_ADDR}"
+  main:
+    addr: "${SERVERS_MAIN_ADDR}"
+kafka:
+  bootstrap_servers: "${KAFKA_BOOTSTRAP_SERVERS}"
+  client_id: "${KAFKA_CLIENT_ID}"
+  acks: "${KAFKA_ACKS}"
+  topic: "${KAFKA_TOPIC}"
