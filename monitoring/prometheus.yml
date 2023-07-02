@@ -19,3 +19,8 @@ scrape_configs:
     scheme: http
     static_configs:
       - targets: ['s3:9000']
+  - job_name: kafka
+    metrics_path: /metrics
+    scheme: http
+    static_configs:
+      - targets: ['kafka-minion:8080']

@@ -53,6 +53,16 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
+  kafka-minion:
+    image: redpandadata/kminion
+    hostname: kafka-minion
+    container_name: colossus_kminion
+    depends_on:
+      - zookeeper
+      - kafka
+    environment:
+      KAFKA_BROKERS: kafka:29092
+
   kowl:
     image: quay.io/cloudhut/kowl
     container_name: colossus_kowl
@@ -117,6 +127,9 @@ services:
       - ./monitoring/dashboards/victoriametrics.json:/var/lib/grafana/dashboards/vm.json
       - ./monitoring/dashboards/vmagent.json:/var/lib/grafana/dashboards/vmagent.json
       - ./monitoring/dashboards/vmalert.json:/var/lib/grafana/dashboards/vmalert.json
+      - ./monitoring/dashboards/kminion-cluster.json:/var/lib/grafana/dashboards/kminion-cluster.json
+      - ./monitoring/dashboards/minio.json:/var/lib/grafana/dashboards/minio.json
+      - ./monitoring/dashboards/colossus_backend.json:/var/lib/grafana/dashboards/colossus_backend.json
     restart: always
 
   vmalert:
