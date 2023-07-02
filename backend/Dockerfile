@@ -10,9 +10,7 @@ RUN go mod download
 COPY ./ ./
 
 # Build the executable
-RUN CGO_ENABLED=0 go build \
-    -installsuffix 'static' \
-    -o /backend
+RUN go build -ldflags '-extldflags "-static"' -o  /backend
  
 # STAGE 2: build the container to run
 FROM gcr.io/distroless/static AS final

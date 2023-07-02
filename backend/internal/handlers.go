@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
@@ -13,6 +15,8 @@ import (
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
+	"strconv"
+	"time"
 )
 
 func InitializeS3Client(s3cfg utils.S3) (*minio.Client, error) {
@@ -74,6 +78,7 @@ func UploadToS3(s3cfg utils.S3, objectName string, uploadedFile *multipart.FileH
 	minioClient, err := InitializeS3Client(s3cfg)
 	if err != nil {
 		log.Fatalln(err)
+		return minio.UploadInfo{}, err
 	}
 
 	contentType := uploadedFile.Header.Get("Content-Type")
@@ -96,7 +101,9 @@ func UploadToS3(s3cfg utils.S3, objectName string, uploadedFile *multipart.FileH
 	}
 
 	log.Printf("Successfully uploaded %s of size %d\n", objectName, info.Size)
-	return info, err
+	uploadedRawImages.Inc()
+
+	return info, nil
 }
 
 func GenerateNamePair(fileName string) (fileNameRaw string, fileNameProcessed string) {
@@ -141,6 +148,7 @@ func JsonErrorResponse(c *gin.Context, err error, status int) {
 
 func RegisterMetrics() {
 	prometheus.MustRegister(uploadedRawImages)
+	prometheus.MustRegister(uploadedRawImagesToKafka)
 	prometheus.MustRegister(retrievedRawImages)
 }
 
@@ -149,6 +157,14 @@ var uploadedRawImages = prometheus.NewCounter(
 		Name: "colossus_backend_uploaded_raw_images",
 		Help: "Count successfully uploaded raw images",
 	},
+)
+
+var uploadedRawImagesToKafka = prometheus.NewCounterVec(
+	prometheus.CounterOpts{
+		Name: "colossus_backend_uploaded_raw_images_to_kafka",
+		Help: "Count successfully uploaded raw images links to Kafka",
+	},
+	[]string{"partition", "client_id"},
 )
 
 var retrievedRawImages = prometheus.NewCounterVec(
@@ -165,12 +181,62 @@ func HandleHealthz(c *gin.Context) {
 	})
 }
 
-func HandleFileUploadToBucket(c *gin.Context) {
+func PutInKafka(cfg *utils.Kafka, data *gin.H) (*kafka.Message, error) {
+	topic := cfg.Topic
+	clientId := cfg.ClientId
+
+	p, err := kafka.NewProducer(&kafka.ConfigMap{
+		"bootstrap.servers": cfg.BootstrapServers,
+		"client.id":         clientId,
+		"acks":              cfg.Acks,
+	})
+
+	if err != nil {
+		log.Fatalln(fmt.Sprintf("Failed to create producer: %s\n", err), err)
+		return nil, err
+	}
+	b, err := json.Marshal(data)
+	if err != nil {
+		log.Fatalln(fmt.Sprintf("Failed to Marshall: %s\n", err), err)
+		return nil, err
+	}
+	fmt.Println(string(b))
+
+	payload := b
+
+	deliveryChan := make(chan kafka.Event, 10000)
+	err = p.Produce(&kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+		Value:          payload},
+		deliveryChan,
+	)
+
+	e := <-deliveryChan
+	m := e.(*kafka.Message)
+
+	if m.TopicPartition.Error != nil {
+		log.Fatalln(fmt.Sprintf("Delivery failed: %v\n", m.TopicPartition.Error), err)
+		return nil, err
+	} else {
+		log.Printf("Delivered message to topic %s [%d] at offset %v\n",
+			*m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
+	}
+	close(deliveryChan)
+
+	uploadedRawImagesToKafka.WithLabelValues(
+		strconv.Itoa(int(m.TopicPartition.Partition)),
+		clientId,
+	).Inc()
+
+	return m, nil
+}
+
+func HandleFileUploadRaw(c *gin.Context) {
 	cfg := c.MustGet("cfg").(*utils.Config)
 
 	f, uploadedFile, err := c.Request.FormFile("file")
 	if err != nil {
-		JsonErrorResponse(c, err, http.StatusInternalServerError)
+		JsonErrorResponse(c, err, http.StatusBadRequest)
 		return
 	}
 
@@ -184,14 +250,21 @@ func HandleFileUploadToBucket(c *gin.Context) {
 		return
 	}
 
-	uploadedRawImages.Inc()
-
-	c.JSON(http.StatusOK, gin.H{
+	data := gin.H{
 		"message":            "file uploaded successfully",
 		"filename_raw":       fileNameRaw,
 		"filename_processed": fileNameProcessed,
+		"queued_at":          time.Now().UTC().Format(time.RFC3339),
 		"info":               info,
-	})
+	}
+
+	_, err = PutInKafka(&cfg.Kafka, &data)
+	if err != nil {
+		JsonErrorResponse(c, err, http.StatusInternalServerError)
+		return
+	}
+
+	c.JSON(http.StatusOK, data)
 }
 
 func HandleFileRetrieveUploadToBucket(c *gin.Context) {

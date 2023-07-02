@@ -48,7 +48,7 @@ func main() {
 	routerMain.Use(ApiMiddleware(cfg))
 
 	routerMain.GET("/healthz", handlers.HandleHealthz)
-	routerMain.POST("/upload-image", handlers.HandleFileUploadToBucket)
+	routerMain.POST("/upload-image", handlers.HandleFileUploadRaw)
 	routerMain.GET("/retrieve-image/:type/:file", handlers.HandleFileRetrieveUploadToBucket)
 
 	routerSystem := gin.Default()

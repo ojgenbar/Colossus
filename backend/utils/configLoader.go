@@ -8,6 +8,7 @@ import (
 type Config struct {
 	S3      S3      `mapstructure:"s3"`
 	Servers Servers `mapstructure:"servers"`
+	Kafka   Kafka   `mapstructure:"kafka"`
 }
 
 type S3 struct {
@@ -38,6 +39,13 @@ type S3Bucket struct {
 
 type Server struct {
 	Addr string `mapstructure:"addr"`
+}
+
+type Kafka struct {
+	BootstrapServers string `mapstructure:"bootstrap_servers"`
+	ClientId         string `mapstructure:"client_id"`
+	Acks             string `mapstructure:"acks"`
+	Topic            string `mapstructure:"topic"`
 }
 
 func LoadConfig() (*Config, error) {

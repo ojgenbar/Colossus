@@ -15,3 +15,8 @@ servers:
     addr: "${SERVERS_SYSTEM_ADDR}"
   main:
     addr: "${SERVERS_MAIN_ADDR}"
+kafka:
+  bootstrap_servers: "${KAFKA_BOOTSTRAP_SERVERS}"
+  client_id: "${KAFKA_CLIENT_ID}"
+  acks: "${KAFKA_ACKS}"
+  topic: "${KAFKA_TOPIC}"
