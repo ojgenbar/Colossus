@@ -11,6 +11,7 @@ Over-engineered thumbnail app.
 ```sh
 cp example_configs/.env example_configs/* ./
 
+# Not pretty
 for path_raw in $(cat .env | awk -F= '{{ print $2 }}')
 do
   path=$(eval echo "$path_raw")
@@ -18,7 +19,6 @@ do
   mkdir -p "$path" -v
   chmod -R 777 "$path"
 done;
-
 ```
 Change something if you feel that way.
 
