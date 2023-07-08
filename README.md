@@ -10,12 +10,21 @@ Over-engineered thumbnail app.
 ## Prepare configs
 ```sh
 cp example_configs/.env example_configs/* ./
+
+for path_raw in $(cat .env | awk -F= '{{ print $2 }}')
+do
+  path=$(eval echo "$path_raw")
+  echo Creating dir "$path"
+  mkdir -p "$path" -v
+  chmod -R 777 "$path"
+done;
+
 ```
 Change something if you feel that way.
 
 ## Run
 ```sh
-cp example_configs/.env example_configs/* ./
+docker-compose up -d --build
 ```
 
 ## Try
