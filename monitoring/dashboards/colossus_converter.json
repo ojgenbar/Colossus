@@ -313,7 +313,7 @@
             "uid": "P4169E866C3094E38"
           },
           "editorMode": "code",
-          "expr": "sum(rate(colossus_converter_processed_images_success_bytes{job=\"colossus_converter\"}[$__rate_interval]))",
+          "expr": "sum(rate(colossus_converter_processed_images_success_bytes{job=\"colossus_converter\"}[$__rate_interval])) by (mime_type)",
           "legendFormat": "{{value}}",
           "range": true,
           "refId": "A"
@@ -1407,6 +1407,6 @@
   "timezone": "browser",
   "title": "Colossus Converter",
   "uid": "B0EJSq9Vz",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }
