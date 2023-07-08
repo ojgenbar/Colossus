@@ -16,11 +16,6 @@ type S3 struct {
 	Buckets S3Buckets `mapstructure:"buckets"`
 }
 
-type Servers struct {
-	System Server `mapstructure:"system"`
-	Main   Server `mapstructure:"main"`
-}
-
 type S3Buckets struct {
 	Raw       S3Bucket `mapstructure:"raw"`
 	Processed S3Bucket `mapstructure:"processed"`
@@ -37,20 +32,21 @@ type S3Bucket struct {
 	Location string `mapstructure:"location"`
 }
 
+type Servers struct {
+	System Server `mapstructure:"system"`
+}
+
 type Server struct {
 	Addr string `mapstructure:"addr"`
 }
 
 type Kafka struct {
-	BootstrapServers string     `mapstructure:"bootstrap_servers"`
-	ClientId         string     `mapstructure:"client_id"`
-	Acks             string     `mapstructure:"acks"`
-	Topic            KafkaTopic `mapstructure:"topic"`
-}
-
-type KafkaTopic struct {
-	Name          string `mapstructure:"name"`
-	NumPartitions int    `mapstructure:"num_partitions"`
+	BootstrapServers string `mapstructure:"bootstrap_servers"`
+	ClientId         string `mapstructure:"client_id"`
+	Topic            string `mapstructure:"topic"`
+	GroupId          string `mapstructure:"group_id"`
+	SessionTimeoutMs int    `mapstructure:"session_timeout_ms"`
+	AutoOffsetReset  string `mapstructure:"auto_offset_reset"`
 }
 
 func LoadConfig() (*Config, error) {

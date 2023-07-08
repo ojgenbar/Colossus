@@ -10,7 +10,7 @@ RUN go mod download
 COPY ./ ./
 
 # Build the executable
-RUN go build -ldflags '-extldflags "-static"' -o  /backend
+RUN go build -ldflags '-extldflags "-static"' -o  /converter
  
 # STAGE 2: build the container to run
 FROM gcr.io/distroless/static AS final
@@ -21,8 +21,8 @@ USER nonroot:nonroot
 # copy configs and compiled app
 WORKDIR /app
 COPY ./configs/ ./configs/
-COPY --from=build --chown=nonroot:nonroot /backend /backend
+COPY --from=build --chown=nonroot:nonroot /converter /converter
 
-EXPOSE 10001 20001
+EXPOSE 20002
 
-ENTRYPOINT ["/backend"]
+ENTRYPOINT ["/converter"]

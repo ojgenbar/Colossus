@@ -1,21 +1,22 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	handlers "github.com/ojgenbar/Colossus/backend/internal"
 	"github.com/ojgenbar/Colossus/backend/utils"
 	ginprometheus "github.com/zsais/go-gin-prometheus"
+	"log"
 	"strings"
 )
 
 func Prepare() *utils.Config {
 	cfg, err := utils.LoadConfig()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	handlers.PrepareS3Buckets(cfg.S3)
+	handlers.PrepareS3Buckets(&cfg.S3)
 	handlers.RegisterMetrics()
+	handlers.PrepareKafkaTopic(&cfg.Kafka)
 	return cfg
 }
 
@@ -54,8 +55,8 @@ func main() {
 	routerSystem := gin.Default()
 	p.SetMetricsPath(routerSystem)
 
-	fmt.Printf("Main server addr is %s.\n", cfg.Servers.Main.Addr)
-	fmt.Printf("System server addr is %s.\n", cfg.Servers.System.Addr)
+	log.Printf("Main server addr is %s.\n", cfg.Servers.Main.Addr)
+	log.Printf("System server addr is %s.\n", cfg.Servers.System.Addr)
 	go routerMain.Run(cfg.Servers.Main.Addr)
 	routerSystem.Run(cfg.Servers.System.Addr)
 }

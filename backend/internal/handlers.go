@@ -14,12 +14,13 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"time"
 )
 
-func InitializeS3Client(s3cfg utils.S3) (*minio.Client, error) {
+func InitializeS3Client(s3cfg *utils.S3) (*minio.Client, error) {
 	endpoint := s3cfg.Auth.Endpoint
 	accessKeyID := s3cfg.Auth.AccessKeyID
 	secretAccessKey := s3cfg.Auth.SecretAccessKey
@@ -36,7 +37,7 @@ func InitializeS3Client(s3cfg utils.S3) (*minio.Client, error) {
 	return minioClient, nil
 }
 
-func PrepareS3Buckets(s3cfg utils.S3) {
+func PrepareS3Buckets(s3cfg *utils.S3) {
 	PrepareS3Bucket(
 		s3cfg,
 		s3cfg.Buckets.Raw.Name,
@@ -49,7 +50,7 @@ func PrepareS3Buckets(s3cfg utils.S3) {
 	)
 }
 
-func PrepareS3Bucket(s3cfg utils.S3, name string, location string) {
+func PrepareS3Bucket(s3cfg *utils.S3, name string, location string) {
 	ctx := context.Background()
 
 	minioClient, err := InitializeS3Client(s3cfg)
@@ -71,7 +72,7 @@ func PrepareS3Bucket(s3cfg utils.S3, name string, location string) {
 	}
 }
 
-func UploadToS3(s3cfg utils.S3, objectName string, uploadedFile *multipart.FileHeader) (minio.UploadInfo, error) {
+func UploadToS3(s3cfg *utils.S3, objectName string, uploadedFile *multipart.FileHeader) (minio.UploadInfo, error) {
 	ctx := context.Background()
 
 	// Initialize minio client object.
@@ -114,7 +115,7 @@ func GenerateNamePair(fileName string) (fileNameRaw string, fileNameProcessed st
 	return fileNameRaw, fileNameProcessed
 }
 
-func RetrieveS3File(c *gin.Context, s3cfg utils.S3, bucketName, objectName string) {
+func RetrieveS3File(c *gin.Context, s3cfg *utils.S3, bucketName, objectName string) {
 	minioClient, err := InitializeS3Client(s3cfg)
 	if err != nil {
 		JsonErrorResponse(c, err, http.StatusInternalServerError)
@@ -122,14 +123,14 @@ func RetrieveS3File(c *gin.Context, s3cfg utils.S3, bucketName, objectName strin
 
 	objectInfo, err := minioClient.StatObject(context.Background(), bucketName, objectName, minio.GetObjectOptions{})
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		JsonErrorResponse(c, err, http.StatusNotFound)
 		return
 	}
 
 	object, err := minioClient.GetObject(context.Background(), bucketName, objectName, minio.GetObjectOptions{})
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		JsonErrorResponse(c, err, http.StatusInternalServerError)
 		return
 	}
@@ -137,6 +138,48 @@ func RetrieveS3File(c *gin.Context, s3cfg utils.S3, bucketName, objectName strin
 
 	retrievedRawImages.WithLabelValues(bucketName).Inc()
 	c.DataFromReader(http.StatusOK, objectInfo.Size, objectInfo.ContentType, object, nil)
+}
+
+func PrepareKafkaTopic(cfg *utils.Kafka) {
+	// Create a new AdminClient.
+	a, err := createKafkaAdminClient(cfg)
+	if err != nil {
+		fmt.Printf("Failed to create Admin client: %s\n", err)
+		os.Exit(1)
+	}
+
+	// Contexts are used to abort or limit the amount of time
+	// the Admin call blocks waiting for a result.
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Create topics on cluster.
+	// Set Admin options to wait for the operation to finish (or at most 60s)
+	maxDur, err := time.ParseDuration("60s")
+	if err != nil {
+		panic("ParseDuration(60s)")
+	}
+	results, err := a.CreateTopics(
+		ctx,
+		// Multiple topics can be created simultaneously
+		// by providing more TopicSpecification structs here.
+		[]kafka.TopicSpecification{{
+			Topic:             cfg.Topic.Name,
+			NumPartitions:     cfg.Topic.NumPartitions,
+			ReplicationFactor: 1}},
+		// Admin options
+		kafka.SetAdminOperationTimeout(maxDur))
+	if err != nil {
+		fmt.Printf("Failed to create topic: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Print results
+	for _, result := range results {
+		fmt.Printf("%s\n", result)
+	}
+
+	a.Close()
 }
 
 func JsonErrorResponse(c *gin.Context, err error, status int) {
@@ -182,25 +225,20 @@ func HandleHealthz(c *gin.Context) {
 }
 
 func PutInKafka(cfg *utils.Kafka, data *gin.H) (*kafka.Message, error) {
-	topic := cfg.Topic
+	topic := cfg.Topic.Name
 	clientId := cfg.ClientId
 
-	p, err := kafka.NewProducer(&kafka.ConfigMap{
-		"bootstrap.servers": cfg.BootstrapServers,
-		"client.id":         clientId,
-		"acks":              cfg.Acks,
-	})
-
-	if err != nil {
-		log.Fatalln(fmt.Sprintf("Failed to create producer: %s\n", err), err)
-		return nil, err
+	p, err, message, err2 := createKafkaProducer(cfg, clientId)
+	if err2 != nil {
+		return message, err2
 	}
+
 	b, err := json.Marshal(data)
 	if err != nil {
 		log.Fatalln(fmt.Sprintf("Failed to Marshall: %s\n", err), err)
 		return nil, err
 	}
-	fmt.Println(string(b))
+	log.Println(string(b))
 
 	payload := b
 
@@ -231,6 +269,32 @@ func PutInKafka(cfg *utils.Kafka, data *gin.H) (*kafka.Message, error) {
 	return m, nil
 }
 
+func createKafkaProducer(cfg *utils.Kafka, clientId string) (*kafka.Producer, error, *kafka.Message, error) {
+	p, err := kafka.NewProducer(&kafka.ConfigMap{
+		"bootstrap.servers": cfg.BootstrapServers,
+		"client.id":         clientId,
+		"acks":              cfg.Acks,
+	})
+
+	if err != nil {
+		log.Fatalln(fmt.Sprintf("Failed to create producer: %s\n", err), err)
+		return nil, nil, nil, err
+	}
+	return p, err, nil, nil
+}
+
+func createKafkaAdminClient(cfg *utils.Kafka) (*kafka.AdminClient, error) {
+	p, err := kafka.NewAdminClient(&kafka.ConfigMap{
+		"bootstrap.servers": cfg.BootstrapServers,
+	})
+
+	if err != nil {
+		log.Fatalln(fmt.Sprintf("Failed to create admin client: %s\n", err), err)
+		return nil, err
+	}
+	return p, nil
+}
+
 func HandleFileUploadRaw(c *gin.Context) {
 	cfg := c.MustGet("cfg").(*utils.Config)
 
@@ -244,7 +308,7 @@ func HandleFileUploadRaw(c *gin.Context) {
 
 	fileNameRaw, fileNameProcessed := GenerateNamePair(uploadedFile.Filename)
 
-	info, err := UploadToS3(cfg.S3, fileNameRaw, uploadedFile)
+	info, err := UploadToS3(&cfg.S3, fileNameRaw, uploadedFile)
 	if err != nil {
 		JsonErrorResponse(c, err, http.StatusInternalServerError)
 		return
@@ -285,5 +349,5 @@ func HandleFileRetrieveUploadToBucket(c *gin.Context) {
 		})
 		return
 	}
-	RetrieveS3File(c, cfg.S3, bucketName, file)
+	RetrieveS3File(c, &cfg.S3, bucketName, file)
 }
