@@ -10,15 +10,15 @@ s3:
     processed:
       bucketName: "${S3_BUCKETS_PROCESSED_BUCKET_NAME}"
       location: "${S3_BUCKETS_PROCESSED_LOCATION}"
+
 servers:
   system:
     addr: "${SERVERS_SYSTEM_ADDR}"
-  main:
-    addr: "${SERVERS_MAIN_ADDR}"
+
 kafka:
   bootstrap_servers: "${KAFKA_BOOTSTRAP_SERVERS}"
   client_id: "${KAFKA_CLIENT_ID}"
-  acks: "${KAFKA_ACKS}"
-  topic:
-    name: "${KAFKA_TOPIC_NAME}"
-    num_partitions: "${KAFKA_TOPIC_NUM_PARTITIONS}"
+  topic: "${KAFKA_TOPIC}"
+  group_id: "${KAFKA_GROUP_ID}"
+  session_timeout_ms: "${KAFKA_SESSION_TIMEOUT_MS}"
+  auto_offset_reset: "${KAFKA_AUTO_OFFSET_RESET}"
