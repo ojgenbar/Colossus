@@ -1,0 +1,32 @@
+replicaCount: 1
+
+image:
+  repository: confluentinc/cp-kafka
+  pullPolicy: IfNotPresent
+  tag: "7.5.9"
+
+service:
+  type: ClusterIP
+  port: 9092
+  targetPort: 9092
+
+kraft:
+  clusterId: "MkU3OEVBNTcwNTJENDM2Qk"
+  nodeId: 1
+  processRoles: "broker,controller"
+
+kafka:
+  listenerSecurityProtocolMap: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+  listeners: "PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093"
+  interBrokerListenerName: "PLAINTEXT"
+  controllerListenerNames: "CONTROLLER"
+  offsetsTopicReplicationFactor: "1"
+  transactionStateLogReplicationFactor: "1"
+  transactionStateLogMinIsr: "1"
+  autoCreateTopicsEnable: "false"
+  logDirs: "/var/lib/kafka/data"
+
+persistence:
+  size: 8Gi
+  mountPath: /var/lib/kafka/data
+  storageClassName: "kafka-storage"
