@@ -15,11 +15,8 @@ services:
       - ${MINIO_DATA_PATH}:/data
 
   backend:
-    image: colossus_backend
+    image: ojgen/colossus-backend
     container_name: colossus_backend
-    build:
-      context: backend/
-      dockerfile: ./Dockerfile
     env_file:
       - example_configs/backend.env
     restart: always
@@ -32,11 +29,8 @@ services:
       - kafka
 
   converter:
-    image: colossus_converter
+    image: ojgen/colossus-converter
     container_name: colossus_converter
-    build:
-      context: converter/
-      dockerfile: ./Dockerfile
     env_file:
       - example_configs/converter.env
     restart: always

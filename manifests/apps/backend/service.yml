@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: colossus-backend
+  namespace: default
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/instance: colossus-backend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 10001
+    targetPort: main
+    protocol: TCP
+    name: main
+  - port: 20001
+    targetPort: system
+    protocol: TCP
+    name: system
+  selector:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/instance: colossus-backend
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: colossus-backend-nodeport
+  namespace: default
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/instance: colossus-backend
+spec:
+  type: NodePort
+  ports:
+    - port: 10001
+      targetPort: main
+      protocol: TCP
+      name: main
+      nodePort: 30001
+  selector:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/instance: colossus-backend

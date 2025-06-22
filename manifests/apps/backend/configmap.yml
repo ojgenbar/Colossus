@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: default
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/instance: colossus-backend
+data:
+  GIN_MODE: "debug"
+  S3_AUTH_ENDPOINT: "colossus-s3-0.colossus-s3-headless.default.svc.cluster.local:9000"
+  S3_BUCKETS_RAW_BUCKET_NAME: "raw"
+  S3_BUCKETS_RAW_LOCATION: "us-east-1"
+  S3_BUCKETS_PROCESSED_BUCKET_NAME: "processed"
+  S3_BUCKETS_PROCESSED_LOCATION: "us-east-1"
+  KAFKA_CLIENT_ID: "colossus_backend"
+  KAFKA_TOPIC_NAME: "raw_queue"
+  KAFKA_TOPIC_NUM_PARTITIONS: "1"
+  KAFKA_ACKS: "all"
+  KAFKA_BOOTSTRAP_SERVERS: "colossus-kafka-0.colossus-kafka-headless.default.svc.cluster.local:29092"
+  SERVERS_SYSTEM_ADDR: ":20001"
+  SERVERS_MAIN_ADDR: ":10001"
