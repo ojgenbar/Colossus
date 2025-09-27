@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  labels:
+    app.kubernetes.io/name: alertmanager
+    app.kubernetes.io/instance: colossus-alertmanager
+data:
+  alertmanager.yml: |
+    route:
+      receiver: blackhole
+
+    receivers:
+      - name: blackhole

@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: colossus-vmalert
+  labels:
+    app.kubernetes.io/name: vmalert
+    app.kubernetes.io/instance: colossus-vmalert
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vmalert
+      app.kubernetes.io/instance: colossus-vmalert
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: vmalert
+        app.kubernetes.io/instance: colossus-vmalert
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: vmalert
+          image: "victoriametrics/vmalert:v1.91.2"
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--datasource.url=http://colossus-victoriametrics:8428/"
+            - "--remoteRead.url=http://colossus-victoriametrics:8428/"
+            - "--remoteWrite.url=http://colossus-victoriametrics:8428/"
+            - "--notifier.url=http://colossus-alertmanager:9093/"
+            - "--rule=/etc/alerts/*.yml"
+            - "--external.url=http://127.0.0.1:3000"
+            - "--external.alert.source=explore?orgId=1&left={\"datasource\":\"VictoriaMetrics\",\"queries\":[{\"expr\":{{$$expr|jsonEscape|queryEscape}},\"refId\":\"A\"}],\"range\":{\"from\":\"now-1h\",\"to\":\"now\"}}"
+          ports:
+            - name: http
+              containerPort: 8880
+              protocol: TCP
+          volumeMounts:
+            - name: rules
+              mountPath: /etc/alerts
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: rules
+          configMap:
+            name: vmalert-rules
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: colossus-vmalert
+  labels:
+    app.kubernetes.io/name: vmalert
+    app.kubernetes.io/instance: colossus-vmalert
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8880
+      targetPort: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: vmalert
+    app.kubernetes.io/instance: colossus-vmalert

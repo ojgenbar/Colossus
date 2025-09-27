@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vmagent-config
+  labels:
+    app.kubernetes.io/name: vmagent
+    app.kubernetes.io/instance: colossus-vmagent
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 10s
+
+    scrape_configs:
+      - job_name: 'vmagent'
+        static_configs:
+          - targets: ['colossus-vmagent:8429']
+      - job_name: 'vmalert'
+        static_configs:
+          - targets: ['colossus-vmalert:8880']
+      - job_name: 'victoriametrics'
+        static_configs:
+          - targets: ['colossus-victoriametrics:8428']
+      - job_name: 'colossus_backend'
+        static_configs:
+          - targets: ['colossus-backend:20001']
+      - job_name: 'colossus_converter'
+        static_configs:
+          - targets: ['colossus-converter:20002']
+      - job_name: minio-job
+        metrics_path: /minio/v2/metrics/cluster
+        scheme: http
+        static_configs:
+          - targets: ['colossus-s3:9000']
+      - job_name: kafka
+        metrics_path: /metrics
+        scheme: http
+        static_configs:
+          - targets: ['colossus-kminion:8080']
