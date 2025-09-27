@@ -38,6 +38,7 @@ metadata:
   labels:
     app.kubernetes.io/name: victoriametrics
     app.kubernetes.io/instance: colossus-victoriametrics
+    monitoring: "enabled"
 spec:
   type: ClusterIP
   ports:

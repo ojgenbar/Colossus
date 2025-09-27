@@ -6,6 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: converter
     app.kubernetes.io/instance: colossus-converter
+    monitoring: "enabled"
 spec:
   type: ClusterIP
   selector:

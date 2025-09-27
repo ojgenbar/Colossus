@@ -10,29 +10,47 @@ data:
     global:
       scrape_interval: 10s
 
+    # Universal targets config: discover all Services in the namespace
+    # that opt-in with label `monitoring=enabled`.
+    # Optional service labels:
+    # - metrics_path: overrides scrape path (default /metrics)
+    # - metrics_scheme: overrides scheme (http/https; default http)
+    # The target port must be named one of: http, metrics, api, system
     scrape_configs:
-      - job_name: 'vmagent'
-        static_configs:
-          - targets: ['colossus-vmagent:8429']
-      - job_name: 'vmalert'
-        static_configs:
-          - targets: ['colossus-vmalert:8880']
-      - job_name: 'victoriametrics'
-        static_configs:
-          - targets: ['colossus-victoriametrics:8428']
-      - job_name: 'colossus_backend'
-        static_configs:
-          - targets: ['colossus-backend:20001']
-      - job_name: 'colossus_converter'
-        static_configs:
-          - targets: ['colossus-converter:20002']
-      - job_name: minio-job
-        metrics_path: /minio/v2/metrics/cluster
-        scheme: http
-        static_configs:
-          - targets: ['colossus-s3:9000']
-      - job_name: kafka
-        metrics_path: /metrics
-        scheme: http
-        static_configs:
-          - targets: ['colossus-kminion:8080']
+      - job_name: 'kubernetes-services'
+        honor_labels: true
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names: ['default']
+        relabel_configs:
+          # Keep only services explicitly enabled for scraping
+          - action: keep
+            source_labels: [__meta_kubernetes_service_label_monitoring]
+            regex: enabled
+
+          # Only keep commonly named metrics ports to avoid scraping random ports
+          - action: keep
+            source_labels: [__meta_kubernetes_endpoint_port_name]
+            regex: (http|metrics|api|system)
+
+          # Set job label from app name for better grouping in dashboards
+          - action: replace
+            source_labels: [__meta_kubernetes_service_label_app_kubernetes_io_name]
+            target_label: job
+            regex: (.+)
+            replacement: ${1}
+
+          # If custom metrics path provided on the Service via annotation, use it
+          - action: replace
+            source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
+            target_label: __metrics_path__
+            regex: (.+)
+            replacement: ${1}
+
+          # If custom scheme provided on the Service via annotation, use it
+          - action: replace
+            source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scheme]
+            target_label: __scheme__
+            regex: (.+)
+            replacement: ${1}

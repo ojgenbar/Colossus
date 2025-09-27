@@ -7,6 +7,9 @@ metadata:
   labels:
     app.kubernetes.io/name: s3
     app.kubernetes.io/instance: colossus-s3
+    monitoring: "enabled"
+  annotations:
+    prometheus.io/path: "/minio/v2/metrics/cluster"
 spec:
   type: ClusterIP
   selector:
