@@ -6,7 +6,7 @@ services:
     container_name: colossus_s3
     env_file:
       - example_configs/s3.env
-    restart: always
+    restart: unless-stopped
     command: server /data --console-address ":9090"
     ports:
       - "10101:9000"
@@ -19,7 +19,7 @@ services:
     container_name: colossus_backend
     env_file:
       - example_configs/backend.env
-    restart: always
+    restart: unless-stopped
     command: /backend
     ports:
       - "10001:10001"
@@ -33,7 +33,7 @@ services:
     container_name: colossus_converter
     env_file:
       - example_configs/converter.env
-    restart: always
+    restart: unless-stopped
     command: /converter
     ports:
       - "20002:20002"
@@ -47,7 +47,7 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-    restart: always
+    restart: unless-stopped
     volumes:
       - ${ZOOKEEPER_DATA_PATH}/data:/var/lib/zookeeper/data
       - ${ZOOKEEPER_DATA_PATH}/log:/var/lib/zookeeper/log
@@ -67,7 +67,7 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
-    restart: always
+    restart: unless-stopped
     volumes:
       - ${KAFKA_DATA_PATH}:/var/lib/kafka/data
 
@@ -80,12 +80,12 @@ services:
       - kafka
     environment:
       KAFKA_BROKERS: kafka:29092
-    restart: always
+    restart: unless-stopped
 
   kowl:
     image: quay.io/cloudhut/kowl
     container_name: colossus_kowl
-    restart: always
+    restart: unless-stopped
     ports:
       - "10104:8080"
     environment:
@@ -108,7 +108,7 @@ services:
     command:
       - "--promscrape.config=/etc/prometheus/prometheus.yml"
       - "--remoteWrite.url=http://victoriametrics:8428/api/v1/write"
-    restart: always
+    restart: unless-stopped
 
   victoriametrics:
     container_name: colossus_victoriametrics
@@ -124,7 +124,7 @@ services:
       - "--httpListenAddr=:8428"
       - "--influxListenAddr=:8089"
       - "--vmalert.proxyURL=http://vmalert:8880"
-    restart: always
+    restart: unless-stopped
 
   grafana:
     container_name: colossus_grafana
@@ -143,7 +143,7 @@ services:
       - ./monitoring/dashboards/minio.json:/var/lib/grafana/dashboards/minio.json
       - ./monitoring/dashboards/colossus_backend.json:/var/lib/grafana/dashboards/colossus_backend.json
       - ./monitoring/dashboards/colossus_converter.json:/var/lib/grafana/dashboards/colossus_converter.json
-    restart: always
+    restart: unless-stopped
 
   vmalert:
     container_name: colossus_vmalert
@@ -166,7 +166,7 @@ services:
       - "--external.url=http://127.0.0.1:3000" #grafana outside container
       # when copypaste the line be aware of '$$' for escaping in '$expr'
       - '--external.alert.source=explore?orgId=1&left={"datasource":"VictoriaMetrics","queries":[{"expr":{{$$expr|jsonEscape|queryEscape}},"refId":"A"}],"range":{"from":"now-1h","to":"now"}}'
-    restart: always
+    restart: unless-stopped
 
   alertmanager:
     container_name: colossus_alertmanager
@@ -175,4 +175,4 @@ services:
       - ./monitoring/alertmanager.yml:/config/alertmanager.yml
     command:
       - "--config.file=/config/alertmanager.yml"
-    restart: always
+    restart: unless-stopped
