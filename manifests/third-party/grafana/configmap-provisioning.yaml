@@ -3,11 +3,12 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: colossus-grafana-provisioning
+  namespace: monitoring
   labels:
     app.kubernetes.io/name: grafana
     app.kubernetes.io/instance: colossus-grafana
     app.kubernetes.io/component: provisioning
-    monitoring: "enabled"
+    metrics_scrape_enabled: "true"
 data:
   datasources.yaml: |
     apiVersion: 1
@@ -16,7 +17,7 @@ data:
       - name: VictoriaMetrics
         type: prometheus
         access: proxy
-        url: http://colossus-victoriametrics:8428
+        url: http://vmsingle-colossus.monitoring.svc:8428
         isDefault: true
   dashboards.yaml: |
     apiVersion: 1

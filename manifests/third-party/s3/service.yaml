@@ -7,7 +7,7 @@ metadata:
   labels:
     app.kubernetes.io/name: s3
     app.kubernetes.io/instance: colossus-s3
-    monitoring: "enabled"
+    metrics_scrape_enabled: "true"
   annotations:
     prometheus.io/path: "/minio/v2/metrics/cluster"
 spec:
@@ -16,11 +16,11 @@ spec:
     app.kubernetes.io/name: s3
     app.kubernetes.io/instance: colossus-s3
   ports:
-    - name: api
+    - name: minio-api
       port: 9000
       targetPort: 9000
       protocol: TCP
-    - name: console
+    - name: minio-console
       port: 9090
       targetPort: 9090
       protocol: TCP
@@ -40,11 +40,11 @@ spec:
     app.kubernetes.io/name: s3
     app.kubernetes.io/instance: colossus-s3
   ports:
-    - name: api
+    - name: minio-api
       port: 9000
       targetPort: 9000
       protocol: TCP
-    - name: console
+    - name: minio-console
       port: 9090
       targetPort: 9090
       protocol: TCP

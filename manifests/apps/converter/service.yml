@@ -6,14 +6,14 @@ metadata:
   labels:
     app.kubernetes.io/name: converter
     app.kubernetes.io/instance: colossus-converter
-    monitoring: "enabled"
+    metrics_scrape_enabled: "true"
 spec:
   type: ClusterIP
   selector:
     app.kubernetes.io/name: converter
     app.kubernetes.io/instance: colossus-converter
   ports:
-    - name: http
+    - name: system
       port: 20002
       targetPort: 20002
       protocol: TCP

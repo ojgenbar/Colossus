@@ -16,7 +16,7 @@ spec:
       labels:
         app.kubernetes.io/name: converter
         app.kubernetes.io/instance: colossus-converter
-        monitoring: "enabled"
+        metrics_scrape_enabled: "true"
     spec:
       containers:
         - name: converter
