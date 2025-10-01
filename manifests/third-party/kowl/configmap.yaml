@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kowl-config
+  labels:
+    app.kubernetes.io/name: kowl
+    app.kubernetes.io/instance: colossus-kowl
+data:
+  config.yaml: |
+    kafka:
+      brokers: ["colossus-kafka-0.colossus-kafka-headless.default.svc.cluster.local:29092"]
