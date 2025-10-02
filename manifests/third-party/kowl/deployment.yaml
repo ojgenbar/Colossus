@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: colossus-kowl
+  labels:
+    app.kubernetes.io/name: kowl
+    app.kubernetes.io/instance: colossus-kowl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kowl
+      app.kubernetes.io/instance: colossus-kowl
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kowl
+        app.kubernetes.io/instance: colossus-kowl
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: kowl
+          image: quay.io/cloudhut/kowl:latest
+          imagePullPolicy: IfNotPresent
+          args:
+            - --config.filepath=/config/config.yaml
+          volumeMounts:
+            - name: kowl-config
+              mountPath: /config
+              readOnly: true
+          ports:
+            - name: http
+              containerPort: 8080
+      volumes:
+        - name: kowl-config
+          configMap:
+            name: kowl-config

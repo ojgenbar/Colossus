@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: colossus-converter
+  labels:
+    app.kubernetes.io/name: converter
+    app.kubernetes.io/instance: colossus-converter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: converter
+      app.kubernetes.io/instance: colossus-converter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: converter
+        app.kubernetes.io/instance: colossus-converter
+        metrics_scrape_enabled: "true"
+    spec:
+      containers:
+        - name: converter
+          image: "ojgen/colossus-converter:latest"
+          imagePullPolicy: IfNotPresent
+          command: ["/converter"]
+          ports:
+            - name: http
+              containerPort: 20002
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: converter-config
+            - secretRef:
+                name: converter-secret
+          readinessProbe:
+            tcpSocket:
+              port: 20002
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 20002
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      restartPolicy: Always

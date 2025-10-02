@@ -1,0 +1,29 @@
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMAlert
+metadata:
+  name: colossus
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: vmalert
+    app.kubernetes.io/instance: colossus
+spec:
+  evaluationInterval: 10s
+  datasource:
+    url: http://vmsingle-colossus.monitoring.svc:8428
+  remoteRead:
+    url: http://vmsingle-colossus.monitoring.svc:8428
+  remoteWrite:
+    url: http://vmsingle-colossus.monitoring.svc:8428
+  notifier:
+    url: http://vmalertmanager-colossus.monitoring.svc:9093
+  ruleSelector:
+    matchLabels:
+      app.kubernetes.io/name: vmalert
+      app.kubernetes.io/instance: colossus
+  podMetadata:
+    labels:
+      metrics_scrape_enabled: "true"
+  extraArgs:
+    external.url: http://colossus-grafana.monitoring.svc:3000
+    external.alert.source: 'explore?orgId=1&left={"datasource":"VictoriaMetrics","queries":[{"expr":{{$$expr|jsonEscape|queryEscape}},"refId":"A"}],"range":{"from":"now-1h","to":"now"}}'

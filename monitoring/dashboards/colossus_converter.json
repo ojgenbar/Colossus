@@ -26,6 +26,7 @@
   "fiscalYearStartMonth": 0,
   "gnetId": 6671,
   "graphTooltip": 0,
+  "id": 10,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -126,7 +127,7 @@
             "uid": "P4169E866C3094E38"
           },
           "editorMode": "code",
-          "expr": "sum(rate(colossus_converter_processed_images_success{job=\"colossus_converter\"}[$__rate_interval])) by (partition)",
+          "expr": "sum(rate(colossus_converter_processed_images_success{job=\"$job\"}[$__rate_interval])) by (partition)",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -219,7 +220,7 @@
             "uid": "P4169E866C3094E38"
           },
           "editorMode": "code",
-          "expr": "sum(rate(colossus_converter_processed_images_failures{job=\"colossus_converter\"}[$__rate_interval])) by (partition)",
+          "expr": "sum(rate(colossus_converter_processed_images_failures{job=\"$job\"}[$__rate_interval])) by (partition)",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -313,7 +314,7 @@
             "uid": "P4169E866C3094E38"
           },
           "editorMode": "code",
-          "expr": "sum(rate(colossus_converter_processed_images_success_bytes{job=\"colossus_converter\"}[$__rate_interval])) by (mime_type)",
+          "expr": "sum(rate(colossus_converter_processed_images_success_bytes{job=\"$job\"}[$__rate_interval])) by (mime_type)",
           "legendFormat": "{{value}}",
           "range": true,
           "refId": "A"
@@ -407,7 +408,7 @@
             "uid": "P4169E866C3094E38"
           },
           "editorMode": "code",
-          "expr": "sum(colossus_converter_processed_images_success_bytes{job=\"colossus_converter\"}[$__rate_interval]) by (mime_type)",
+          "expr": "sum(colossus_converter_processed_images_success_bytes{job=\"$job\"}[$__rate_interval]) by (mime_type)",
           "legendFormat": "{{value}}",
           "range": true,
           "refId": "A"
@@ -488,7 +489,7 @@
                 "uid": "P4169E866C3094E38"
               },
               "editorMode": "code",
-              "expr": "process_resident_memory_bytes{job=\"colossus_converter\"}",
+              "expr": "process_resident_memory_bytes{job=\"$job\"}",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{pod}} - resident",
@@ -502,7 +503,7 @@
                 "type": "prometheus",
                 "uid": "P4169E866C3094E38"
               },
-              "expr": "process_virtual_memory_bytes{job=\"colossus_converter\"}",
+              "expr": "process_virtual_memory_bytes{job=\"$job\"}",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{pod}} - virtual",
@@ -602,7 +603,7 @@
                 "type": "prometheus",
                 "uid": "P4169E866C3094E38"
               },
-              "expr": "rate(process_resident_memory_bytes{job=\"colossus_converter\"}[$interval])",
+              "expr": "rate(process_resident_memory_bytes{job=\"$job\"}[$interval])",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{pod}} - resident",
@@ -615,7 +616,7 @@
                 "type": "prometheus",
                 "uid": "P4169E866C3094E38"
               },
-              "expr": "deriv(process_virtual_memory_bytes{job=\"colossus_converter\"}[$interval])",
+              "expr": "deriv(process_virtual_memory_bytes{job=\"$job\"}[$interval])",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{pod}} - virtual",
@@ -715,7 +716,7 @@
                 "type": "prometheus",
                 "uid": "P4169E866C3094E38"
               },
-              "expr": "go_memstats_alloc_bytes{job=\"colossus_converter\"}",
+              "expr": "go_memstats_alloc_bytes{job=\"$job\"}",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{pod}} - bytes allocated",
@@ -728,7 +729,7 @@
                 "type": "prometheus",
                 "uid": "P4169E866C3094E38"
               },
-              "expr": "rate(go_memstats_alloc_bytes_total{job=\"colossus_converter\"}[30s])",
+              "expr": "rate(go_memstats_alloc_bytes_total{job=\"$job\"}[30s])",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{pod}} - alloc rate",
@@ -741,7 +742,7 @@
                 "type": "prometheus",
                 "uid": "P4169E866C3094E38"
               },
-              "expr": "go_memstats_stack_inuse_bytes{job=\"colossus_converter\"}",
+              "expr": "go_memstats_stack_inuse_bytes{job=\"$job\"}",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{pod}} - stack inuse",
@@ -754,7 +755,7 @@
                 "type": "prometheus",
                 "uid": "P4169E866C3094E38"
               },
-              "expr": "go_memstats_heap_inuse_bytes{job=\"colossus_converter\"}",
+              "expr": "go_memstats_heap_inuse_bytes{job=\"$job\"}",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
@@ -855,7 +856,7 @@
                 "type": "prometheus",
                 "uid": "P4169E866C3094E38"
               },
-              "expr": "deriv(go_memstats_alloc_bytes{job=\"colossus_converter\"}[$interval])",
+              "expr": "deriv(go_memstats_alloc_bytes{job=\"$job\"}[$interval])",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{pod}} - bytes allocated",
@@ -868,7 +869,7 @@
                 "type": "prometheus",
                 "uid": "P4169E866C3094E38"
               },
-              "expr": "rate(go_memstats_alloc_bytes_total{job=\"colossus_converter\"}[$interval])",
+              "expr": "rate(go_memstats_alloc_bytes_total{job=\"$job\"}[$interval])",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{pod}} - alloc rate",
@@ -881,7 +882,7 @@
                 "type": "prometheus",
                 "uid": "P4169E866C3094E38"
               },
-              "expr": "deriv(go_memstats_stack_inuse_bytes{job=\"colossus_converter\"}[$interval])",
+              "expr": "deriv(go_memstats_stack_inuse_bytes{job=\"$job\"}[$interval])",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{pod}} - stack inuse",
@@ -894,7 +895,7 @@
                 "type": "prometheus",
                 "uid": "P4169E866C3094E38"
               },
-              "expr": "deriv(go_memstats_heap_inuse_bytes{job=\"colossus_converter\"}[$interval])",
+              "expr": "deriv(go_memstats_heap_inuse_bytes{job=\"$job\"}[$interval])",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
@@ -990,7 +991,7 @@
                 "type": "prometheus",
                 "uid": "P4169E866C3094E38"
               },
-              "expr": "process_open_fds{job=\"colossus_converter\"}",
+              "expr": "process_open_fds{job=\"$job\"}",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{pod}}",
@@ -1085,7 +1086,7 @@
                 "type": "prometheus",
                 "uid": "P4169E866C3094E38"
               },
-              "expr": "deriv(process_open_fds{job=\"colossus_converter\"}[$interval])",
+              "expr": "deriv(process_open_fds{job=\"$job\"}[$interval])",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{pod}}",
@@ -1180,7 +1181,7 @@
                 "type": "prometheus",
                 "uid": "P4169E866C3094E38"
               },
-              "expr": "go_goroutines{job=\"colossus_converter\"}",
+              "expr": "go_goroutines{job=\"$job\"}",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{pod}}",
@@ -1275,7 +1276,7 @@
                 "type": "prometheus",
                 "uid": "P4169E866C3094E38"
               },
-              "expr": "go_gc_duration_seconds{job=\"colossus_converter\"}",
+              "expr": "go_gc_duration_seconds{job=\"$job\"}",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{pod}}: {{quantile}}",
@@ -1372,6 +1373,13 @@
         "refresh": 2,
         "skipUrlSync": false,
         "type": "interval"
+      },
+      {
+        "hide": 2,
+        "name": "job",
+        "query": "colossus-converter",
+        "skipUrlSync": false,
+        "type": "constant"
       }
     ]
   },
@@ -1407,6 +1415,6 @@
   "timezone": "browser",
   "title": "Colossus Converter",
   "uid": "B0EJSq9Vz",
-  "version": 2,
+  "version": 1,
   "weekStart": ""
 }

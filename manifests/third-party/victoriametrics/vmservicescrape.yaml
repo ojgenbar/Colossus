@@ -1,0 +1,18 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: default-service-scrape
+  namespace: monitoring
+spec:
+  namespaceSelector:
+    any: true
+  selector:
+    matchLabels:
+      metrics_scrape_enabled: "true"
+  endpoints:
+    - port: system
+      interval: 10s
+      path: /metrics
+    - port: minio-api
+      interval: 10s
+      path: /minio/v2/metrics/cluster

@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: colossus-kminion
+  labels:
+    app.kubernetes.io/name: kminion
+    app.kubernetes.io/instance: colossus-kminion
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kminion
+      app.kubernetes.io/instance: colossus-kminion
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kminion
+        app.kubernetes.io/instance: colossus-kminion
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: kminion
+          image: redpandadata/kminion:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: KAFKA_BROKERS
+              valueFrom:
+                configMapKeyRef:
+                  name: kminion-config
+                  key: KAFKA_BROKERS
+                  optional: false
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
