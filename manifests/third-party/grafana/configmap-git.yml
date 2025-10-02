@@ -11,5 +11,5 @@ metadata:
     metrics_scrape_enabled: "true"
 data:
   GIT_SYNC_REPO: "https://github.com/ojgenbar/Colossus.git"
-  GIT_SYNC_BRANCH: "add-vm-logs"
+  GIT_SYNC_BRANCH: "main"
   GIT_SYNC_PERIOD: "1h"
