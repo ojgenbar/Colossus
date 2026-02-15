@@ -21,7 +21,7 @@ spec:
       containers:
       - name: backend
         image: "ojgen/colossus-backend:latest"
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - name: main
           containerPort: 10001

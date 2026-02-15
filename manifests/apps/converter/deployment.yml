@@ -21,7 +21,7 @@ spec:
       containers:
         - name: converter
           image: "ojgen/colossus-converter:latest"
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           command: ["/converter"]
           ports:
             - name: http
