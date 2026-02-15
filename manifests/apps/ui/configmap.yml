@@ -31,4 +31,11 @@ data:
         location / {
             try_files $uri $uri/ /index.html;
         }
+
+        # nginx stub_status for prometheus exporter
+        location /stub_status {
+            stub_status;
+            allow 127.0.0.1;
+            deny all;
+        }
     }

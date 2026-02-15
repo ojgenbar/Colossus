@@ -6,6 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: ui
     app.kubernetes.io/instance: colossus-ui
+    metrics_scrape_enabled: "true"
 spec:
   type: ClusterIP
   ports:
@@ -13,6 +14,10 @@ spec:
     targetPort: http
     protocol: TCP
     name: http
+  - port: 9113
+    targetPort: system
+    protocol: TCP
+    name: system
   selector:
     app.kubernetes.io/name: ui
     app.kubernetes.io/instance: colossus-ui
