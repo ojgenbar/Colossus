@@ -44,9 +44,9 @@ spec:
             periodSeconds: 30
           resources:
             requests:
-              memory: "512Mi"
-              cpu: "500m"
+              memory: 512Mi
+              cpu: 200m
             limits:
-              memory: "512Mi"
-              cpu: "500m"
+              memory: 512Mi
+              cpu: 500m
       restartPolicy: Always

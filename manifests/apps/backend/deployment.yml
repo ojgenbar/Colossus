@@ -51,10 +51,10 @@ spec:
           timeoutSeconds: 3
           failureThreshold: 3
         resources:
-          limits:
-            cpu: 500m
-            memory: 512Mi
           requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
             cpu: 500m
             memory: 512Mi
         securityContext:
