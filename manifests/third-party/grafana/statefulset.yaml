@@ -81,7 +81,7 @@ spec:
             initialDelaySeconds: 30
             periodSeconds: 20
         - name: git-sync
-          image: registry.k8s.io/git-sync/git-sync:v4.1.0
+          image: registry.k8s.io/git-sync/git-sync:v4.5.1
           imagePullPolicy: IfNotPresent
           env:
             - name: GITSYNC_REPO
@@ -89,11 +89,11 @@ spec:
                 configMapKeyRef:
                   name: colossus-grafana-git
                   key: GITSYNC_REPO
-            - name: GITSYNC_BRANCH
+            - name: GITSYNC_REF
               valueFrom:
                 configMapKeyRef:
                   name: colossus-grafana-git
-                  key: GITSYNC_BRANCH
+                  key: GITSYNC_REF
                   optional: true
             - name: GITSYNC_PERIOD
               valueFrom:
@@ -103,8 +103,8 @@ spec:
                   optional: true
           args:
             - --root=/opt/git
-            - --dest=link/colossus
-            - --wait=10
+            - --link=link/colossus
+            - --period=10s
           securityContext:
             runAsUser: 472
             runAsGroup: 472

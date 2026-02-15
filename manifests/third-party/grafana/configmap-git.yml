@@ -11,5 +11,5 @@ metadata:
     metrics_scrape_enabled: "true"
 data:
   GITSYNC_REPO: "https://github.com/ojgenbar/Colossus.git"
-  GITSYNC_BRANCH: "main"
+  GITSYNC_REF: "main"
   GITSYNC_PERIOD: "1h"
