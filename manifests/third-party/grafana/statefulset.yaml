@@ -84,22 +84,22 @@ spec:
           image: registry.k8s.io/git-sync/git-sync:v4.1.0
           imagePullPolicy: IfNotPresent
           env:
-            - name: GIT_SYNC_REPO
+            - name: GITSYNC_REPO
               valueFrom:
                 configMapKeyRef:
                   name: colossus-grafana-git
-                  key: GIT_SYNC_REPO
-            - name: GIT_SYNC_BRANCH
+                  key: GITSYNC_REPO
+            - name: GITSYNC_BRANCH
               valueFrom:
                 configMapKeyRef:
                   name: colossus-grafana-git
-                  key: GIT_SYNC_BRANCH
+                  key: GITSYNC_BRANCH
                   optional: true
-            - name: GIT_SYNC_PERIOD
+            - name: GITSYNC_PERIOD
               valueFrom:
                 configMapKeyRef:
                   name: colossus-grafana-git
-                  key: GIT_SYNC_PERIOD
+                  key: GITSYNC_PERIOD
                   optional: true
           args:
             - --root=/opt/git

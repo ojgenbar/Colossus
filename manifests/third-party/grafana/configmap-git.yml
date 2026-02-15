@@ -10,6 +10,6 @@ metadata:
     app.kubernetes.io/component: dashboards-git
     metrics_scrape_enabled: "true"
 data:
-  GIT_SYNC_REPO: "https://github.com/ojgenbar/Colossus.git"
-  GIT_SYNC_BRANCH: "main"
-  GIT_SYNC_PERIOD: "1h"
+  GITSYNC_REPO: "https://github.com/ojgenbar/Colossus.git"
+  GITSYNC_BRANCH: "main"
+  GITSYNC_PERIOD: "1h"
