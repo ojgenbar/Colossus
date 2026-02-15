@@ -21,7 +21,7 @@ spec:
       containers:
         - name: converter
           image: "ojgen/colossus-converter:latest"
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           command: ["/converter"]
           ports:
             - name: http
@@ -44,9 +44,9 @@ spec:
             periodSeconds: 30
           resources:
             requests:
-              memory: "512Mi"
-              cpu: "500m"
+              cpu: 200m
+              memory: 512Mi
             limits:
-              memory: "512Mi"
-              cpu: "500m"
+              cpu: 500m
+              memory: 512Mi
       restartPolicy: Always

@@ -1,5 +1,5 @@
 # argument for Go version
-ARG GO_VERSION=1.20.5
+ARG GO_VERSION=1.25.7
  
 # STAGE 1: building the executable
 FROM golang:${GO_VERSION} AS build
@@ -18,7 +18,7 @@ FROM gcr.io/distroless/static AS final
 LABEL maintainer="ojgen"
 USER nonroot:nonroot
  
-# copy configs and compiled app
+# Copy configs and compiled app
 WORKDIR /app
 COPY ./configs/ ./configs/
 COPY --from=build --chown=nonroot:nonroot /backend /backend

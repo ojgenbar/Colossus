@@ -1,5 +1,7 @@
 version: "3"
 
+# Not really supported, migrated to k8s manifests
+
 services:
   s3:
     image: minio/minio
