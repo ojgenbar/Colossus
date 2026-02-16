@@ -41,12 +41,14 @@ spec:
               mountPath: /var/lib/grafana
       containers:
         - name: grafana
-          image: grafana/grafana:9.2.7
+          image: grafana/grafana:12.3.3
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 3000
           env:
+            - name: GF_PLUGINS_PREINSTALL
+              value: "victoriametrics-logs-datasource"
             - name: GF_PATHS_PROVISIONING
               value: /etc/grafana/provisioning
             - name: GF_SECURITY_ADMIN_PASSWORD

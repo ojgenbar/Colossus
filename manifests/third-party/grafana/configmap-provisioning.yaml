@@ -19,6 +19,10 @@ data:
         access: proxy
         url: http://vmsingle-colossus.monitoring.svc:8428
         isDefault: true
+      - name: VictoriaLogs
+        type: victoriametrics-logs-datasource
+        access: proxy
+        url: http://vlsingle-colossus.monitoring.svc:9428
   dashboards.yaml: |
     apiVersion: 1
 

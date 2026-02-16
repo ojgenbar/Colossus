@@ -1,0 +1,21 @@
+---
+apiVersion: operator.victoriametrics.com/v1
+kind: VLSingle
+metadata:
+  name: colossus
+  namespace: monitoring
+spec:
+  retentionPeriod: 7d
+  storage:
+    accessModes: ["ReadWriteOnce"]
+    storageClassName: victorialogs-storage
+    resources:
+      requests:
+        storage: 4Gi
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 200m
+    limits:
+      memory: 2Gi
+      cpu: 1
