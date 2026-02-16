@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: colossus-victorialogs-data-pv
+spec:
+  capacity:
+    storage: 4Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/home/ojgen/.colossus_data_k8s/_victorialogs_data"
+  storageClassName: "victorialogs-storage"
